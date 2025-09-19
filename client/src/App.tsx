@@ -1,23 +1,27 @@
-import { useEffect } from 'react';
+import { useRef, useState } from "react";
 
+function MyComponent() {
+  const [todos, setTodos] = useState<string[]>([]); // initialize as empty array
+  const inputRef = useRef<HTMLInputElement | null>(null);
 
-function App() {
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                const response = await fetch(import.meta.env.VITE_SERVER_URL);
-                const text = await response.text(); // parse text
-                console.log(text);
+  const handleClick = () => {
+    if (inputRef.current && inputRef.current.value != "") {
+      setTodos([...todos, inputRef.current.value]); // push value, not element
+      inputRef.current.value = ""; // optional: clear input after adding
+    }
+  };
 
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
+  return (
+    <div>
+      <input type="text" ref={inputRef} />
+      <button onClick={handleClick}>Add Todo</button>
 
-        fetchData();
-    }, []);
-
-    return <div>Check the console</div>;
+      <h3>TODOs:</h3>
+      {todos.map((todo, index) => (
+        <div key={index}>{todo}</div>
+      ))}
+    </div>
+  );
 }
 
-export default App;
+export default MyComponent;
