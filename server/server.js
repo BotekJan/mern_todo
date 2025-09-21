@@ -1,16 +1,34 @@
+require('dotenv').config()
 const express = require('express')
 const cors = require('cors')
+const mongoose = require('mongoose')
+
+mongoose.connect(process.env.MONGODB_CONNECTION_STRING)
+const db = mongoose.connection
+db.on('error', (error) => {
+    console.error(error)
+})
+db.once('open', () => {
+    console.log('connected to database')
+})
+
+
+
 
 const app = express()
-const port = 5000
-
 
 app.use(cors({ origin: 'http://localhost:5173' }));
 
-app.get('/', (req, res) => {
-    res.send('Hello World!')
-})
+app.use(express.json())
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+
+
+
+const todosRouter = require('./routes/todos')
+app.use('/todos', todosRouter)
+
+
+
+app.listen(5000, () => {
+    console.log(`Example app listening on port 5000`)
 })

@@ -1,0 +1,19 @@
+GET http://localhost:5000/todos
+###
+GET http://localhost:5000/todos/
+###
+POST http://localhost:5000/todos
+Content-Type: application/json
+
+{
+    "content": "Finish these routes"
+}
+###
+DELETE http://localhost:5000/todos/
+###
+PATCH http://localhost:5000/todos/68d04dea3982b9ad3ca51e69
+Content-Type: application/json
+
+{
+    "isDone": "true"
+}
