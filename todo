@@ -1,5 +1,7 @@
-improve client form
-add crud operation on client
+improve client form ✅
+add crud operation on client ✅
 add database
 store todos in database
+add client routes ✅
 add auth
+

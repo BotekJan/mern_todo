@@ -4,13 +4,13 @@ import App from './App.tsx'
 import '@picocss/pico/css/pico.min.css';
 import "../styles/tailwind.css"
 import "./index.css"
+import { BrowserRouter } from 'react-router-dom'
 
 
 createRoot(document.getElementById('root')!).render(
     <StrictMode>
-        <div className='flex justify-center items-center mt-[100px]'>
-
+        <BrowserRouter>
             <App />
-        </div>
+        </BrowserRouter>
     </StrictMode>,
 )
