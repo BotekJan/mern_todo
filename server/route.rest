@@ -1,4 +1,5 @@
 GET http://localhost:5000/todos
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9.VGVzdFVzZXI.vAQOd6sU8SL5n1C3M3tlDKcoZtGI3EY0cNe0WhsaywY
 ###
 GET http://localhost:5000/todos/
 ###
@@ -16,4 +17,35 @@ Content-Type: application/json
 
 {
     "isDone": "true"
+}
+
+###
+GET http://localhost:5000/users
+
+
+###
+POST http://localhost:5000/users
+Content-Type: application/json
+
+{
+    "name": "TestUser",
+    "password": "TestPassword123"
+}
+
+###
+
+POST http://localhost:5000/users/login
+Content-Type: application/json
+
+{
+    "name": "TestUser",
+    "password": "TestPassword123"
+}
+
+###
+POST http://localhost:5000/users/token
+Content-Type: application/json
+
+{
+    "token": ""
 }
