@@ -3,63 +3,24 @@ const router = express.Router();
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const RefreshToken = require('../models/refreshToken')
+const User = require('../models/user')
 
-let users = [];
-
-
-router.get('/users', (req, res) => {
-    res.json(users)
+router.get('/users', async (req, res) => {
+    try {
+        const users = await User.find(); // no filter = all documents
+        res.json(users)
+    } catch (err) {
+        res.status(500).send({ error: err })
+    }
 })
 
-router.post("/token", async (req, res) => {
-    const { token: incomingToken } = req.body;
-    if (!incomingToken) return res.status(401).send("No token provided");
 
-    try {
-        // Find all tokens in DB (we store hashed tokens)
-        const tokens = await RefreshToken.find();
 
-        let tokenDoc = null;
-        // Compare incoming token with stored hashed tokens
-        for (const t of tokens) {
-            const match = await bcrypt.compare(incomingToken, t.token);
-            if (match) {
-                tokenDoc = t;
-                break;
-            }
-        }
-
-        if (!tokenDoc) return res.status(403).send("Invalid refresh token");
-
-        // Verify JWT signature
-        const payload = jwt.verify(incomingToken, process.env.REFRESH_TOKEN_SECRET);
-
-        // Generate new access token (use the payload from refresh token)
-        const accessToken = generateAccessToken({ id: payload.id, name: payload.name });
-
-        // Generate new refresh token
-        const newRefreshToken = jwt.sign(
-            { id: payload.id, name: payload.name },
-            process.env.REFRESH_TOKEN_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        // Hash the new refresh token and replace in DB
-        tokenDoc.token = await bcrypt.hash(newRefreshToken, 10);
-        tokenDoc.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
-        await tokenDoc.save();
-
-        res.json({ accessToken, refreshToken: newRefreshToken });
-    } catch (err) {
-        console.error(err);
-        res.status(403).send("Invalid token");
-    }
-});
-router.post('/users', async (req, res) => {
+router.post('/auth/register', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
-        const user = { name: req.body.name, password: hashedPassword }
-        users.push(user)
+        const user = new User({ email: req.body.email, password: hashedPassword })
+        user.save()
         res.status(201).send()
     }
     catch {
@@ -67,40 +28,93 @@ router.post('/users', async (req, res) => {
     }
 })
 
-router.post('/users/login', async (req, res) => {
-    const user = users.find(user => user.name = req.body.name)
-    if (user == null) {
-        return res.status(400).send('Cannot find user')
-    }
+router.post('/auth/login', async (req, res) => {
+    console.log("Login route hit", req.body);
 
     try {
-        if (await bcrypt.compare(req.body.password, user.password)) {
-            const accessToken = generateAccessToken(user)
-            console.log('got here')
-            const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" })
-            console.log('got heree')
-            const hashedToken = await bcrypt.hash(refreshToken, 10);
-            const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + 7);
-            try {
-                const refreshToken = new RefreshToken({
-                    user: user,
-                    token: hashedToken,
-                    expiresAt,
-                })
-                await refreshToken.save()
-            } catch (error) {
-                res.status(500).send({ message: error.message })
-            }
+        const user = await User.findOne({ email: req.body.email });
+        if (!user) return res.status(400).send('Cannot find user');
 
-            res.json({ accessToken: accessToken, refreshToken: refreshToken })
-        } else {
-            res.send('Not allowed')
-        }
+        const match = await bcrypt.compare(req.body.password, user.password);
+        if (!match) return res.status(401).send('Not allowed');
+
+        const accessToken = generateAccessToken({ id: user._id, email: user.email });
+
+        const refreshToken = jwt.sign({ id: user._id, email: user.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
+        const hashedToken = await bcrypt.hash(refreshToken, 10);
+        const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+        console.log("got here");
+
+        user.refreshTokens.push({
+            tokenHash: hashedToken,
+            device: req.headers['user-agent'] || "Unknown",
+            expiresAt
+        });
+
+        await user.save();
+
+        res.json({ accessToken, refreshToken });
+
     } catch (err) {
-        res.status(500)
+        console.error(err);
+        res.status(500).json({ error: "Server error" });
     }
-})
+});
+
+router.post("/auth/refresh", async (req, res) => {
+    try {
+        // Read refresh token from HttpOnly cookie first
+        const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+        if (!refreshToken) return res.status(401).json({ message: "No token provided" });
+
+        // Verify JWT signature
+        let payload;
+        try {
+            payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+        } catch (err) {
+            return res.status(403).json({ message: "Invalid or expired refresh token" });
+        }
+
+        // Get user by ID from payload
+        const user = await User.findById(payload.id);
+        console.log(user)
+        if (!user) return res.status(401).json({ message: "User not found" });
+
+        // Check hashed token in user's refreshTokens array
+        const tokenEntry = user.refreshTokens.find(t =>
+            bcrypt.compareSync(refreshToken, t.tokenHash)
+        );
+        if (!tokenEntry) return res.status(403).json({ message: "Invalid refresh token" });
+
+        // Generate new tokens
+        const newAccessToken = generateAccessToken({ id: user._id, email: user.email });
+        const newRefreshToken = jwt.sign(
+            { id: user._id, email: user.email },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: "7d" }
+        );
+        const hashedNewToken = await bcrypt.hash(newRefreshToken, 10);
+
+        // Replace old token in user's array
+        tokenEntry.tokenHash = hashedNewToken;
+        tokenEntry.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
+        await user.save();
+
+        // Optionally set the new refresh token as an HttpOnly cookie
+        res.cookie("refreshToken", newRefreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({ accessToken: newAccessToken });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Server error" });
+    }
+});
 
 function generateAccessToken(user) {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' })

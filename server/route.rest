@@ -24,28 +24,28 @@ GET http://localhost:5000/users
 
 
 ###
-POST http://localhost:5000/users
+POST http://localhost:5000/auth/register
 Content-Type: application/json
 
 {
-    "name": "TestUser",
+    "email": "User@test.com",
     "password": "TestPassword123"
 }
 
 ###
 
-POST http://localhost:5000/users/login
+POST http://localhost:5000/auth/login
 Content-Type: application/json
 
 {
-    "name": "TestUser",
+    "email": "User@test.com",
     "password": "TestPassword123"
 }
 
 ###
-POST http://localhost:5000/users/token
+POST http://localhost:5000/auth/refresh
 Content-Type: application/json
 
 {
-    "token": ""
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDNlMjUzMzhjYWEyMzZiYjE2NTIyZCIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsImlhdCI6MTc1ODcxODE1NiwiZXhwIjoxNzU5MzIyOTU2fQ.BX97oPf3jG3nr8owL25eiv9Petm-AaEe6u8Ob_X7h8U"
 }

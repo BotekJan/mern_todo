@@ -13,6 +13,7 @@ const refreshTokenSchema = new mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+
 });
 
 // Optional: auto-delete expired tokens with a TTL index
