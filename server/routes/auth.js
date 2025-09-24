@@ -76,15 +76,23 @@ router.post('/users/login', async (req, res) => {
     try {
         if (await bcrypt.compare(req.body.password, user.password)) {
             const accessToken = generateAccessToken(user)
+            console.log('got here')
             const refreshToken = jwt.sign(user, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" })
+            console.log('got heree')
             const hashedToken = await bcrypt.hash(refreshToken, 10);
             const expiresAt = new Date();
             expiresAt.setDate(expiresAt.getDate() + 7);
-            await RefreshToken.create({
-                user: user._id,
-                token: hashedToken,
-                expiresAt,
-            });
+            try {
+                const refreshToken = new RefreshToken({
+                    user: user,
+                    token: hashedToken,
+                    expiresAt,
+                })
+                await refreshToken.save()
+            } catch (error) {
+                res.status(500).send({ message: error.message })
+            }
+
             res.json({ accessToken: accessToken, refreshToken: refreshToken })
         } else {
             res.send('Not allowed')
@@ -95,7 +103,7 @@ router.post('/users/login', async (req, res) => {
 })
 
 function generateAccessToken(user) {
-    return jwt.sign(user.name, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' })
+    return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' })
 }
 
 module.exports = router
