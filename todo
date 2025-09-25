@@ -1,7 +1,23 @@
 improve client form ✅
 add crud operation on client ✅
-add database
-store todos in database
+add database✅
+store todos in database✅
 add client routes ✅
-add auth
+add auth ✅
+- add a logout and logout all route 
+
+backend code review and refactoring
+
+implement auth on the frontend
+- figure out secure refresh token storage
+
+redesign the frontend
+
+add more functionality to todos
+
+deploy
+
+figure out logs for backend
+
+think about making a mobile version with react native
 
