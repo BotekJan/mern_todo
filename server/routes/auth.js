@@ -2,8 +2,8 @@ const express = require('express')
 const router = express.Router();
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const RefreshToken = require('../models/refreshToken')
 const User = require('../models/user')
+const { v4: uuidv4 } = require('uuid');
 
 router.get('/users', async (req, res) => {
     try {
@@ -40,14 +40,18 @@ router.post('/auth/login', async (req, res) => {
 
         const accessToken = generateAccessToken({ id: user._id, email: user.email });
 
-        const refreshToken = jwt.sign({ id: user._id, email: user.email }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "7d" });
-        const hashedToken = await bcrypt.hash(refreshToken, 10);
+        const jti = uuidv4();
+        const refreshToken = jwt.sign(
+            { id: user._id, email: user.email, jti: jti },
+            process.env.REFRESH_TOKEN_SECRET,
+            { expiresIn: "7d" }
+        );
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
         console.log("got here");
 
         user.refreshTokens.push({
-            tokenHash: hashedToken,
+            jti: jti,
             device: req.headers['user-agent'] || "Unknown",
             expiresAt
         });
@@ -83,21 +87,23 @@ router.post("/auth/refresh", async (req, res) => {
 
         // Check hashed token in user's refreshTokens array
         const tokenEntry = user.refreshTokens.find(t =>
-            bcrypt.compareSync(refreshToken, t.tokenHash)
+
+            payload.jti === t.jti
         );
         if (!tokenEntry) return res.status(403).json({ message: "Invalid refresh token" });
 
         // Generate new tokens
         const newAccessToken = generateAccessToken({ id: user._id, email: user.email });
+        const jti = uuidv4();
         const newRefreshToken = jwt.sign(
-            { id: user._id, email: user.email },
+            { id: user._id, email: user.email, jti: jti },
             process.env.REFRESH_TOKEN_SECRET,
             { expiresIn: "7d" }
         );
-        const hashedNewToken = await bcrypt.hash(newRefreshToken, 10);
+
 
         // Replace old token in user's array
-        tokenEntry.tokenHash = hashedNewToken;
+        tokenEntry.jti = jti;
         tokenEntry.expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
         await user.save();
 

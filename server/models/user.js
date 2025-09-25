@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const refreshTokenSchema = new mongoose.Schema({
-    tokenHash: { type: String, required: true }, // hash of the token
+    jti: { type: String, required: true }, // hash of the token
     device: { type: String },                    // optional: device name or user-agent
     createdAt: { type: Date, default: Date.now },
     expiresAt: { type: Date, required: true }
