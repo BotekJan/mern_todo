@@ -25,6 +25,7 @@ router.post('/auth/login', async (req, res) => {
         const user = await User.findOne({ email: req.body.email });
         if (!user) return res.status(400).send('Cannot find user');
 
+
         const match = await bcrypt.compare(req.body.password, user.password);
         if (!match) return res.status(401).send('Not allowed');
 
@@ -48,6 +49,8 @@ router.post('/auth/login', async (req, res) => {
 
         await user.save();
 
+        console.log(user)
+
         res.cookie("refreshToken", refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
@@ -55,7 +58,7 @@ router.post('/auth/login', async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
         });
 
-        res.json({ accessToken });
+        res.json({ accessToken: accessToken, user: { email: user.email } });
 
     } catch (err) {
         console.error(err);

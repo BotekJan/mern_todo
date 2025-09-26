@@ -20,7 +20,7 @@ export default function Login() {
         }
 
         login(username, password);
-        //navigate("/dashboard");
+        navigate("/");
     };
 
     return <div className="flex flex-col items-center justify-center h-[90%] gap-8">
@@ -28,9 +28,9 @@ export default function Login() {
         <h1>Login</h1>
         <form className="w-92 flex gap-2 flex-col" onSubmit={handleLogin}>
             <label htmlFor="email">Email</label>
-            <input type="email" name="email" id="email" ref={emailRef} />
+            <input type="email" name="email" id="email" ref={emailRef} value={"user@test.com"} />
             <label htmlFor="password">Password</label>
-            <input type="password" name="password" id="password" ref={passwordRef} />
+            <input type="password" name="password" id="password" ref={passwordRef} value={"TestPassword123"} />
             <button type="submit">Login</button>
         </form>
 

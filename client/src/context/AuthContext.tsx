@@ -39,8 +39,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
                 headers: { "Content-Type": "application/json" },
             });
             const data = await response.json();
-            console.log(data)
+            if (data.accessToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+            }
+
             setUser(data.user);
+            console.log(value.user)
         } catch (error) {
             console.log(error);
 
@@ -48,8 +52,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     };
 
-    const logout = () => {
+    const logout = async () => {
+        const response = await fetch(`${apiUrl}/auth/logout`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+        });
+        console.log(response)
         setUser(null);
+        localStorage.removeItem("accessToken")
     };
 
     const value: AuthContextType = {

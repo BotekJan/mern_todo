@@ -1,6 +1,8 @@
 import { useRef, useState } from "react";
+import { useAuth } from "../context/AuthContext";
 
 function Todos() {
+    const { logout } = useAuth();
     const [todos, setTodos] = useState<string[]>([]);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingValue, setEditingValue] = useState<string>("");
@@ -31,7 +33,7 @@ function Todos() {
         <>
             <div className="absolute right-0 p-2 flex gap-8">
                 <p>Username</p>
-                <a href="#" >Log out</a>
+                <a href="#" onClick={logout} >Log out</a>
             </div>
             <div className="flex flex-col justify-center items-center h-[60vh]">
 
