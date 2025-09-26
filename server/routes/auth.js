@@ -5,22 +5,12 @@ const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const { v4: uuidv4 } = require('uuid');
 
-router.get('/users', async (req, res) => {
-    try {
-        const users = await User.find(); // no filter = all documents
-        res.json(users)
-    } catch (err) {
-        res.status(500).send({ error: err })
-    }
-})
-
-
 
 router.post('/auth/register', async (req, res) => {
     try {
         const hashedPassword = await bcrypt.hash(req.body.password, 10)
         const user = new User({ email: req.body.email, password: hashedPassword })
-        user.save()
+        await user.save()
         res.status(201).send()
     }
     catch {
@@ -29,7 +19,7 @@ router.post('/auth/register', async (req, res) => {
 })
 
 router.post('/auth/login', async (req, res) => {
-    console.log("Login route hit", req.body);
+
 
     try {
         const user = await User.findOne({ email: req.body.email });
@@ -48,7 +38,7 @@ router.post('/auth/login', async (req, res) => {
         );
         const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
-        console.log("got here");
+
 
         user.refreshTokens.push({
             jti: jti,
@@ -58,7 +48,14 @@ router.post('/auth/login', async (req, res) => {
 
         await user.save();
 
-        res.json({ accessToken, refreshToken });
+        res.cookie("refreshToken", refreshToken, {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "strict",
+            maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+        });
+
+        res.json({ accessToken });
 
     } catch (err) {
         console.error(err);
@@ -122,8 +119,75 @@ router.post("/auth/refresh", async (req, res) => {
     }
 });
 
+router.post("/auth/logout", async (req, res) => {
+
+
+
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    if (!refreshToken) return res.status(401).json({ message: "No token provided" });
+
+    let payload;
+    try {
+        payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired refresh token" });
+    }
+
+    // Get user by ID from payload
+    const user = await User.findById(payload.id);
+    console.log(user)
+    if (!user) return res.status(401).json({ message: "User not found" });
+
+    const tokenEntry = user.refreshTokens.find(t =>
+
+        payload.jti === t.jti
+    );
+    if (!tokenEntry) return res.status(403).json({ message: "Invalid refresh token" });
+
+    user.refreshTokens = user.refreshTokens.filter(t => t.jti !== payload.jti);
+    await user.save();
+
+    // Optionally clear cookie if you set the token there
+    res.clearCookie("refreshToken", { httpOnly: true, sameSite: "Strict", secure: process.env.NODE_ENV === "production" });
+
+    res.status(200).json({ message: "Logged out successfully" });
+
+
+})
+
+router.post("/auth/logoutAll", async (req, res) => {
+    const refreshToken = req.cookies?.refreshToken || req.body?.refreshToken;
+    if (!refreshToken) return res.status(401).json({ message: "No token provided" });
+
+    let payload;
+    try {
+        payload = jwt.verify(refreshToken, process.env.REFRESH_TOKEN_SECRET);
+    } catch (err) {
+        return res.status(403).json({ message: "Invalid or expired refresh token" });
+    }
+
+    // Atomically find the user and check the token exists
+    const user = await User.findOne({ _id: payload.id, 'refreshTokens.jti': payload.jti });
+    if (!user) return res.status(403).json({ message: "Invalid refresh token" });
+
+    // Clear all refresh tokens
+    user.refreshTokens = [];
+    await user.save();
+
+    // Clear cookie if set
+    res.clearCookie("refreshToken", {
+        httpOnly: true,
+        sameSite: "Strict",
+        secure: process.env.NODE_ENV === "production"
+    });
+
+    res.status(200).json({ message: "Logged out from all devices successfully" });
+});
+
 function generateAccessToken(user) {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' })
 }
+
+
 
 module.exports = router

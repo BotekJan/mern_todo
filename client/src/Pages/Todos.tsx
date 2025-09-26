@@ -28,44 +28,51 @@ function Todos() {
     };
 
     return (
-        <div className="flex justify-center mt-10">
-
-            <div className="text-center ">
-                <div className="pb-[40px]">
-
-                    <h1 className="pb-[20px]">TO-DO list</h1>
-                    <input type="text" ref={inputRef} />
-                    <button onClick={handleClick}>Add Todo</button>
-                </div>
-
-
-                <h3>TODOs:</h3>
-                {todos.map((todo, index) => (
-                    <div key={index} className="flex text-center justify-center align-center items-center gap-[20px] mb-[20px]">
-                        {editingIndex === index ? (
-                            <input
-                                type="text"
-                                value={editingValue}
-                                onChange={(e) => setEditingValue(e.target.value)}
-                                onBlur={saveEdit}
-                                onKeyDown={(e) => {
-                                    if (e.key === "Enter") saveEdit();
-                                }}
-                                autoFocus
-                            />
-                        ) : (
-                            <div onClick={() => {
-                                setEditingIndex(index);
-                                setEditingValue(todo);
-                            }}>
-                                {todo}
-                            </div>
-                        )}
-                        <button className="secondary" onClick={() => removeTodo(index)}>Remove</button>
-                    </div>
-                ))}
+        <>
+            <div className="absolute right-0 p-2 flex gap-8">
+                <p>Username</p>
+                <a href="#" >Log out</a>
             </div>
-        </div>
+            <div className="flex flex-col justify-center items-center h-[60vh]">
+
+
+                <div className="text-center ">
+                    <div className="pb-[40px]">
+
+                        <h1 className="pb-[20px]">TO-DO list</h1>
+                        <input type="text" ref={inputRef} />
+                        <button className="w-[100%]" onClick={handleClick}>Add Todo</button>
+                    </div>
+
+
+                    <h3>TODOs:</h3>
+                    {todos.map((todo, index) => (
+                        <div key={index} className="flex text-center justify-center align-center items-center gap-[20px] mb-[20px]">
+                            {editingIndex === index ? (
+                                <input
+                                    type="text"
+                                    value={editingValue}
+                                    onChange={(e) => setEditingValue(e.target.value)}
+                                    onBlur={saveEdit}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") saveEdit();
+                                    }}
+                                    autoFocus
+                                />
+                            ) : (
+                                <div onClick={() => {
+                                    setEditingIndex(index);
+                                    setEditingValue(todo);
+                                }}>
+                                    {todo}
+                                </div>
+                            )}
+                            <button className="secondary" onClick={() => removeTodo(index)}>Remove</button>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        </>
     );
 }
 

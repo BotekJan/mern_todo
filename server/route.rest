@@ -49,3 +49,20 @@ Content-Type: application/json
 {
     "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDUzM2FhZDYxYTYwZjcxNTJhODFkNyIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsImp0aSI6ImVmMmE3YTMzLWQ4MmEtNDU1OC05M2IzLThlMWU1NTE4YTdhYSIsImlhdCI6MTc1ODgwMzE0NCwiZXhwIjoxNzU5NDA3OTQ0fQ.jWrFJbR9PpxeZxx0NY2_Lqi9qPvNPquMMhV11TlVIUc"
 }
+
+###
+POST http://localhost:5000/auth/logout
+Content-Type: application/json
+
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDUzM2FhZDYxYTYwZjcxNTJhODFkNyIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsImp0aSI6ImZhYjYzYmI1LWM4YjAtNDJjNC1hMzBmLWY0NWM1MTdmYmIwOSIsImlhdCI6MTc1ODgxMzU2NywiZXhwIjoxNzU5NDE4MzY3fQ.Nri0hrghSogluU2fRQdHNG251Y2AiVW0oNk2qqmFFBk"
+}
+
+
+###
+POST http://localhost:5000/auth/logoutAll
+Content-Type: application/json
+
+{
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY4ZDUzM2FhZDYxYTYwZjcxNTJhODFkNyIsImVtYWlsIjoidXNlckB0ZXN0LmNvbSIsImp0aSI6IjY5ZmU0NjI3LWY3YzItNDY1ZC04OWQwLTJkZjk2MzZmMTFiMiIsImlhdCI6MTc1ODgxMzkzNiwiZXhwIjoxNzU5NDE4NzM2fQ.pH4ZXxrLF0WatWoWg0bbQNNNF9NgO2Am2oOlXSBFWao"
+}
