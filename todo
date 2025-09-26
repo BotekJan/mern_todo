@@ -10,8 +10,12 @@ backend code review and refactoring
 
 implement auth on the frontend
 - figure out secure refresh token storage✅
+- fix (likely) cors pre flight problem making -> me send 2 request 
+- add automatic refreshing of tokens
 
-redesign the frontend
+redesign the frontend ✅
+
+move todos into the user object in db
 
 add more functionality to todos
 
