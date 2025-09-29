@@ -1,6 +1,12 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { Link } from "react-router-dom";
+import { fetchWithAuth } from "../utils/fetchWithAuth";
+
+type Todo = {
+    content: string;
+    isDone: boolean;
+};
 
 function Todos() {
     const { logout } = useAuth();
@@ -8,9 +14,27 @@ function Todos() {
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingValue, setEditingValue] = useState<string>("");
     const inputRef = useRef<HTMLInputElement | null>(null);
+    const apiUrl = import.meta.env.VITE_SERVER_URL;
 
-    const handleClick = () => {
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const res = await fetchWithAuth<Todo[]>(`${apiUrl}/todos`, { method: "GET" })
+
+                const contents = res.map(todo => todo.content)
+                setTodos(contents)
+            } catch (error) {
+                console.log(error)
+            }
+        }
+
+        fetchData();
+
+    }, [])
+
+    const saveTodo = async () => {
         if (inputRef.current && inputRef.current.value !== "") {
+            const res = await fetchWithAuth(`${apiUrl}/todos`, { method: "POST", body: { content: inputRef.current.value } })
             setTodos([...todos, inputRef.current.value]);
             inputRef.current.value = "";
         }
@@ -45,7 +69,7 @@ function Todos() {
 
                         <h1 className="pb-[20px]">TO-DO list</h1>
                         <input type="text" ref={inputRef} />
-                        <button className="w-[100%]" onClick={handleClick}>Add Todo</button>
+                        <button className="w-[100%]" onClick={saveTodo}>Add Todo</button>
                     </div>
 
 

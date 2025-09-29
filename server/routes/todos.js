@@ -1,38 +1,44 @@
 const express = require('express')
 const router = express.Router()
-const Todo = require('../models/todo')
+const User = require('../models/user')
 const authenticateToken = require('../middleware/auth')
 
-router.get('/', async (req, res) => {
+
+router.get('/', authenticateToken, async (req, res) => {
     try {
-        const todos = await Todo.find()
+        const user = await User.findById(req.user.id);
+        const todos = user.todos
         res.json(todos)
     } catch (err) {
         res.status(500).json({ message: err.message })
     }
 })
 
-router.get('/:id', getTodo, (req, res) => {
+router.get('/:id', authenticateToken, getTodo, (req, res) => {
     res.json(res.todo)
 })
 
-router.post('/', async (req, res) => {
-    const todo = new Todo({
+router.post('/', authenticateToken, async (req, res) => {
+    const user = await User.findById(req.user.id);
+    const todo = {
         content: req.body.content,
         isDone: false
-    })
+    }
 
     try {
-        const newTodo = await todo.save()
-        res.status(201).json(newTodo)
+        user.todos.push(todo)
+        await user.save()
+        res.status(201).json(todo)
     } catch (err) {
         res.status(400).json({ message: err.message })
     }
 })
 
-router.delete('/:id', getTodo, async (req, res) => {
+router.delete('/:id', authenticateToken, getTodo, async (req, res) => {
     try {
-        await res.todo.deleteOne()
+        const user = await User.findById(req.user.id);
+        user.todos = user.todos.filter(todo => todo.id != req.params.id)
+        await user.save()
         res.json({ message: 'Deleted todo' })
     } catch (err) {
         res.status(500).json({ message: err.message })
@@ -40,7 +46,6 @@ router.delete('/:id', getTodo, async (req, res) => {
 })
 
 router.patch('/:id', getTodo, async (req, res) => {
-    console.log(req.body)
     if (req.body.content != null) {
         res.todo.content = req.body.content
     }
@@ -58,7 +63,8 @@ router.patch('/:id', getTodo, async (req, res) => {
 async function getTodo(req, res, next) {
     let todo
     try {
-        todo = await Todo.findById(req.params.id)
+        const user = await User.findById(req.user.id);
+        todo = user.todos.find(todo => todo.id = req.params.id)
         if (todo == null) {
             return res.status(404).json({ message: 'cannot find Todo' })
         }

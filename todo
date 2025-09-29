@@ -4,18 +4,26 @@ add database✅
 store todos in database✅
 add client routes ✅
 add auth ✅
-- add a logout and logout all route 
+- add a logout and logout all route ✅
 
 backend code review and refactoring
 
 implement auth on the frontend
 - figure out secure refresh token storage✅
-- fix (likely) cors pre flight problem making -> me send 2 request 
-- add automatic refreshing of tokens
+- fix (likely) cors pre flight problem making -> me send 2 request ✅
+
 
 redesign the frontend ✅
 
-move todos into the user object in db
+move todos into the user object in db✅
+
+add todos to frontend
+- GET ✅
+- POST ✅
+- PATCH
+- DELETE
+
+add automatic refreshing of tokens
 
 add more functionality to todos
 

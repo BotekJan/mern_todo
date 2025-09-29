@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const todoSchema = require('./todo')
 
 const refreshTokenSchema = new mongoose.Schema({
     jti: { type: String, required: true }, // hash of the token
@@ -25,7 +26,8 @@ const userSchema = new mongoose.Schema({
         type: Date,
         default: Date.now
     },
-    refreshTokens: [refreshTokenSchema]
+    refreshTokens: [refreshTokenSchema],
+    todos: { type: [todoSchema], default: [] }
 
 });
 
