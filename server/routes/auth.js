@@ -4,6 +4,7 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
 const { v4: uuidv4 } = require('uuid');
+const authenticateToken = require('../middleware/auth');
 
 
 router.post('/auth/register', async (req, res) => {
@@ -186,6 +187,10 @@ router.post("/auth/logoutAll", async (req, res) => {
 
     res.status(200).json({ message: "Logged out from all devices successfully" });
 });
+
+router.get('/auth/me', authenticateToken, (req, res) => {
+    res.status(200).json({ user: { email: req.user.email } });
+})
 
 function generateAccessToken(user) {
     return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '10m' })

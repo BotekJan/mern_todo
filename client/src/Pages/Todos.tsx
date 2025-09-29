@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useAuth } from "../context/AuthContext";
+import { Link } from "react-router-dom";
 
 function Todos() {
     const { logout } = useAuth();
@@ -32,6 +33,7 @@ function Todos() {
     return (
         <>
             <div className="absolute right-0 p-2 flex gap-8">
+                <Link to="/test">Test</Link>
                 <p>Username</p>
                 <a href="#" onClick={logout} >Log out</a>
             </div>

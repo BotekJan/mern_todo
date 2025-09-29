@@ -1,5 +1,5 @@
 // src/context/AuthContext.tsx
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import type { ReactNode } from "react";
 
 interface User {
@@ -8,6 +8,7 @@ interface User {
 
 interface AuthContextType {
     user: User | null;
+    loading: boolean;
     isAuthenticated: boolean;
     login: (username: string, password: string) => void;
     logout: () => void;
@@ -29,27 +30,53 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     const [user, setUser] = useState<User | null>(null);
+    const [loading, setLoading] = useState(false);
     const apiUrl = import.meta.env.VITE_SERVER_URL;
 
+
+    useEffect(() => {
+        const accessToken = localStorage.getItem("accessToken");
+
+        if (accessToken) {
+            const fetchUser = async () => {
+                try {
+                    const res = await fetch(`${apiUrl}/auth/me`, {
+                        method: "GET",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${accessToken}`,
+                        },
+                    });
+
+                    const data = await res.json();
+                    setUser(data.user);
+                    console.log(data.user)
+
+                } catch (error) {
+                    console.error("Error fetching user:", error);
+                }
+            };
+
+            fetchUser();
+        }
+    }, []);
+
     const login = async (email: string, password: string) => {
+        setLoading(true);
         try {
-            const response = await fetch(`${apiUrl}/auth/login`, {
+            const res = await fetch(`${apiUrl}/auth/login`, {
                 method: "POST",
                 body: JSON.stringify({ email: email, password: password }),
                 headers: { "Content-Type": "application/json" },
             });
-            const data = await response.json();
+            const data = await res.json();
             if (data.accessToken) {
                 localStorage.setItem('accessToken', data.accessToken);
+                setUser(data.user);
             }
-
-            setUser(data.user);
-            console.log(value.user)
-        } catch (error) {
-            console.log(error);
-
+        } finally {
+            setLoading(false);
         }
-
     };
 
     const logout = async () => {
@@ -64,6 +91,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     const value: AuthContextType = {
         user,
+        loading,
         isAuthenticated: !!user,
         login,
         logout,
