@@ -28,7 +28,9 @@ router.post('/', authenticateToken, async (req, res) => {
     try {
         user.todos.push(todo)
         await user.save()
-        res.status(201).json(todo)
+        const newTodo = user.todos[user.todos.length - 1];
+
+        res.status(201).json(newTodo);
     } catch (err) {
         res.status(400).json({ message: err.message })
     }

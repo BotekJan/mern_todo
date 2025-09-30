@@ -37,15 +37,9 @@ function Todos() {
     const saveTodo = async () => {
         if (inputRef.current && inputRef.current.value !== "") {
             const res = await fetchWithAuth(`${apiUrl}/todos`, { method: "POST", body: { content: inputRef.current.value } })
-            setTodos([...todos, {
+            setTodos([...todos, res]);
 
-                content: inputRef.current.value,
-                isDone: false,
-                _id: "",
-                createdAt: ""
-            }
-
-            ]);
+            console.log(todos)
             inputRef.current.value = "";
         }
     };
