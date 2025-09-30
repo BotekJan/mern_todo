@@ -6,11 +6,13 @@ import { fetchWithAuth } from "../utils/fetchWithAuth";
 type Todo = {
     content: string;
     isDone: boolean;
+    _id: string;
+    createdAt: string;
 };
 
 function Todos() {
-    const { logout } = useAuth();
-    const [todos, setTodos] = useState<string[]>([]);
+    const { logout, user } = useAuth();
+    const [todos, setTodos] = useState<Todo[]>([]);
     const [editingIndex, setEditingIndex] = useState<number | null>(null);
     const [editingValue, setEditingValue] = useState<string>("");
     const inputRef = useRef<HTMLInputElement | null>(null);
@@ -21,8 +23,8 @@ function Todos() {
             try {
                 const res = await fetchWithAuth<Todo[]>(`${apiUrl}/todos`, { method: "GET" })
 
-                const contents = res.map(todo => todo.content)
-                setTodos(contents)
+
+                setTodos(res)
             } catch (error) {
                 console.log(error)
             }
@@ -35,22 +37,44 @@ function Todos() {
     const saveTodo = async () => {
         if (inputRef.current && inputRef.current.value !== "") {
             const res = await fetchWithAuth(`${apiUrl}/todos`, { method: "POST", body: { content: inputRef.current.value } })
-            setTodos([...todos, inputRef.current.value]);
+            setTodos([...todos, {
+
+                content: inputRef.current.value,
+                isDone: false,
+                _id: "",
+                createdAt: ""
+            }
+
+            ]);
             inputRef.current.value = "";
         }
     };
 
-    const removeTodo = (index: number) => {
-        setTodos(todos.filter((_, i) => i !== index));
+    const removeTodo = async (_id: string) => {
+        const res = await fetchWithAuth(`${apiUrl}/todos/${_id}`, { method: "DELETE" })
+        if (res) {
+            setTodos(todos => todos.filter(todo => todo._id != _id));
+        } else {
+            console.error('Failed to delete todo')
+        }
+
+
+
     };
 
-    const saveEdit = () => {
+    const saveEdit = async () => {
         if (editingIndex !== null) {
-            const updated = [...todos];
-            updated[editingIndex] = editingValue;
-            setTodos(updated);
-            setEditingIndex(null);
-            setEditingValue("");
+            const res = await fetchWithAuth(`${apiUrl}/todos/${todos[editingIndex]._id}`, { method: "PATCH", body: { content: editingValue } })
+            if (res) {
+                const updated = [...todos];
+                updated[editingIndex].content = editingValue;
+                setTodos(updated);
+                setEditingIndex(null);
+                setEditingValue("");
+            }
+            else {
+                console.error('Failed to update todo')
+            }
         }
     };
 
@@ -58,13 +82,13 @@ function Todos() {
         <>
             <div className="absolute right-0 p-2 flex gap-8">
                 <Link to="/test">Test</Link>
-                <p>Username</p>
+                <p>{user?.email}</p>
                 <a href="#" onClick={logout} >Log out</a>
             </div>
-            <div className="flex flex-col justify-center items-center h-[60vh]">
+            <div className="flex flex-col justify-center items-center h-[60vh] ">
 
 
-                <div className="text-center ">
+                <div className="text-center mt-[40vh]">
                     <div className="pb-[40px]">
 
                         <h1 className="pb-[20px]">TO-DO list</h1>
@@ -90,12 +114,12 @@ function Todos() {
                             ) : (
                                 <div onClick={() => {
                                     setEditingIndex(index);
-                                    setEditingValue(todo);
+                                    setEditingValue(todo.content);
                                 }}>
-                                    {todo}
+                                    {todo.content}
                                 </div>
                             )}
-                            <button className="secondary" onClick={() => removeTodo(index)}>Remove</button>
+                            <button className="secondary" onClick={() => removeTodo(todo._id)}>Remove</button>
                         </div>
                     ))}
                 </div>

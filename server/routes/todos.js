@@ -37,7 +37,7 @@ router.post('/', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, getTodo, async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
-        user.todos = user.todos.filter(todo => todo.id != req.params.id)
+        user.todos = user.todos.filter(todo => todo._id != req.params.id)
         await user.save()
         res.json({ message: 'Deleted todo' })
     } catch (err) {
@@ -46,15 +46,18 @@ router.delete('/:id', authenticateToken, getTodo, async (req, res) => {
 })
 
 router.patch('/:id', getTodo, async (req, res) => {
-    if (req.body.content != null) {
-        res.todo.content = req.body.content
-    }
-    if (req.body.isDone != null) {
-        res.todo.isDone = req.body.isDone
-    }
+
     try {
-        const updatedTodo = await (res.todo.save())
-        res.json(updatedTodo)
+        const user = await User.findById(req.user.id);
+        const todo = user.todos.find(todo => todo._id === req.params.id)
+        if (req.body.content != null) {
+            todo.content = req.body.content
+        }
+        if (req.body.isDone != null) {
+            todo.isDone = req.body.isDone
+        }
+        await user.save()
+        res.json({ message: 'Updated todo todo' })
     } catch (err) {
         res.status(400).message({ message: err.message })
     }
