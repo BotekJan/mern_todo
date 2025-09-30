@@ -64,6 +64,7 @@ function Todos() {
 
     const saveEdit = async () => {
         if (editingIndex !== null) {
+            console.log(todos[editingIndex]._id)
             const res = await fetchWithAuth(`${apiUrl}/todos/${todos[editingIndex]._id}`, { method: "PATCH", body: { content: editingValue } })
             if (res) {
                 const updated = [...todos];
@@ -81,7 +82,6 @@ function Todos() {
     return (
         <>
             <div className="absolute right-0 p-2 flex gap-8">
-                <Link to="/test">Test</Link>
                 <p>{user?.email}</p>
                 <a href="#" onClick={logout} >Log out</a>
             </div>
@@ -102,6 +102,7 @@ function Todos() {
                         <div key={index} className="flex text-center justify-center align-center items-center gap-[20px] mb-[20px]">
                             {editingIndex === index ? (
                                 <input
+                                    style={{ marginBottom: "0px" }}
                                     type="text"
                                     value={editingValue}
                                     onChange={(e) => setEditingValue(e.target.value)}

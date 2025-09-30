@@ -45,11 +45,13 @@ router.delete('/:id', authenticateToken, getTodo, async (req, res) => {
     }
 })
 
-router.patch('/:id', getTodo, async (req, res) => {
+router.patch('/:id', authenticateToken, getTodo, async (req, res) => {
 
     try {
         const user = await User.findById(req.user.id);
-        const todo = user.todos.find(todo => todo._id === req.params.id)
+
+        const todo = user.todos.find(todo => todo._id == req.params.id)
+
         if (req.body.content != null) {
             todo.content = req.body.content
         }
@@ -59,7 +61,7 @@ router.patch('/:id', getTodo, async (req, res) => {
         await user.save()
         res.json({ message: 'Updated todo todo' })
     } catch (err) {
-        res.status(400).message({ message: err.message })
+        res.status(400).json({ message: err.message })
     }
 })
 
@@ -67,7 +69,7 @@ async function getTodo(req, res, next) {
     let todo
     try {
         const user = await User.findById(req.user.id);
-        todo = user.todos.find(todo => todo.id = req.params.id)
+        todo = user.todos.find(todo => todo._id == req.params.id)
         if (todo == null) {
             return res.status(404).json({ message: 'cannot find Todo' })
         }

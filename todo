@@ -19,9 +19,11 @@ move todos into the user object in db✅
 
 add todos to frontend
 - GET ✅
-- POST ✅
-- PATCH
-- DELETE
+- POST
+    - save new todoId on frontend 
+- PATCH 
+ - add isDone
+- DELETE ✅
 
 add automatic refreshing of tokens
 
